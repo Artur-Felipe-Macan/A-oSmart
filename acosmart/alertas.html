@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AçoSmart - Alertas & Notificações</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/alertas.css">
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col bg-[#0d0f12] text-slate-300">
+
+  <!-- Header / Barra Superior com Botão de Voltar e Navegação -->
+  <header class="bg-[#14171d] border-b border-[#242832] px-4 py-2.5 flex items-center justify-between shadow-md z-20 shrink-0">
+    <div class="flex items-center space-x-3">
+      <!-- Botão Voltar -->
+      <a href="clientes.html" class="px-2.5 py-1.5 bg-[#1b1e26] hover:bg-[#252934] text-slate-300 rounded border border-[#2a2e39] text-xs font-mono-tech flex items-center gap-1.5">
+        <span>← Voltar</span>
+      </a>
+
+      <div class="px-2.5 py-1 bg-[#222733] border border-[#373d4d] rounded text-slate-200 font-mono-tech font-bold text-sm tracking-wider">
+        <span>⚙️ AÇOSMART</span>
+      </div>
+      <div class="h-4 w-[1px] bg-[#2a2e39]"></div>
+      
+      <!-- Navegação Completa -->
+      <nav class="flex items-center gap-1 font-mono-tech text-xs">
+        <a href="alertas.html" class="px-3 py-1.5 rounded bg-[#222733] text-amber-400 font-bold border border-[#373d4d]">Alertas</a>
+        <a href="pedidos.html" class="px-3 py-1.5 rounded text-slate-400 hover:text-slate-200 hover:bg-[#1b1e26]">Pedidos</a>
+        <a href="materiais.html" class="px-3 py-1.5 rounded text-slate-400 hover:text-slate-200 hover:bg-[#1b1e26]">Materiais</a>
+        <a href="maquinas.html" class="px-3 py-1.5 rounded text-slate-400 hover:text-slate-200 hover:bg-[#1b1e26]">Máquinas</a>
+        <a href="usuarios.html" class="px-3 py-1.5 rounded text-slate-400 hover:text-slate-200 hover:bg-[#1b1e26]">Usuários</a>
+        <a href="fornecedores.html" class="px-3 py-1.5 rounded text-slate-400 hover:text-slate-200 hover:bg-[#1b1e26]">Fornecedores</a>
+        <a href="clientes.html" class="px-3 py-1.5 rounded text-slate-400 hover:text-slate-200 hover:bg-[#1b1e26]">Clientes</a>
+        <a href="oficina.html" class="px-3 py-1.5 rounded text-slate-400 hover:text-slate-200 hover:bg-[#1b1e26]">Oficina</a>
+      </nav>
+    </div>
+
+    <div class="flex items-center gap-3 font-mono-tech text-xs">
+      <span id="userDisplay" class="text-slate-400">Operador: Admin</span>
+      <a href="login.html" class="px-2.5 py-1 bg-[#1b1e26] hover:bg-[#252934] border border-[#2a2e39] rounded text-slate-300">Sair</a>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal: Tabela de Alertas -->
+  <main class="flex-1 p-6 overflow-y-auto industrial-grid">
+    <div class="max-w-6xl mx-auto space-y-6">
+      
+      <div class="flex items-center justify-between border-b border-[#222631] pb-4">
+        <div>
+          <h2 class="text-xl font-bold font-mono-tech text-slate-100">⚠️ Central de Alertas e Ocorrências</h2>
+          <p class="text-xs text-slate-400 font-mono-tech mt-1">Monitoramento em tempo real de estoque, máquinas, prazos e manutenções</p>
+        </div>
+        <button id="btnAcknowledgeAll" class="px-3 py-2 bg-[#1e2430] hover:bg-[#2a3242] border border-[#343e52] text-slate-200 text-xs font-mono-tech rounded">
+          ✓ Marcar Todos como Lidos
+        </button>
+      </div>
+
+      <!-- Tabela Baseada na Imagem de Alertas -->
+      <div class="bg-[#14171d] border border-[#222631] rounded overflow-hidden shadow-lg">
+        <table class="w-full text-left font-mono-tech text-xs">
+          <thead class="bg-[#1a1e28] text-slate-400 border-b border-[#222631] uppercase text-[11px]">
+            <tr>
+              <th class="p-3.5">tipo</th>
+              <th class="p-3.5">mensagem</th>
+              <th class="p-3.5">nível</th>
+              <th class="p-3.5">data</th>
+              <th class="p-3.5">resolvido</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[#222631] text-slate-300">
+            <tr class="hover:bg-[#1a1e26] transition-all"><td class="p-3.5 font-bold text-slate-100">Estoque baixo</td><td class="p-3.5">Chapa carbono abaixo do mínimo</td><td class="p-3.5 text-red-400">Alto[cite: 8]</td><td class="p-3.5">2026-10-07[cite: 8]</td><td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] bg-red-950 text-red-400 border border-red-800">Não[cite: 8]</span></td></tr>
+            <tr class="hover:bg-[#1a1e26] transition-all"><td class="p-3.5 font-bold text-slate-100">Máquina parada</td><td class="p-3.5">Laser 02 está indisponível</td><td class="p-3.5 text-amber-400">Médio[cite: 8]</td><td class="p-3.5">2026-10-07[cite: 8]</td><td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] bg-red-950 text-red-400 border border-red-800">Não[cite: 8]</span></td></tr>
+            <tr class="hover:bg-[#1a1e26] transition-all"><td class="p-3.5 font-bold text-slate-100">Prazo</td><td class="p-3.5">Pedido 102 está próximo do vencimento</td><td class="p-3.5 text-red-400">Alto[cite: 8]</td><td class="p-3.5">2026-10-08[cite: 8]</td><td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] bg-red-950 text-red-400 border border-red-800">Não[cite: 8]</span></td></tr>
+            <tr class="hover:bg-[#1a1e26] transition-all"><td class="p-3.5 font-bold text-slate-100">Estoque</td><td class="p-3.5">Quantidade de inox abaixo do limite</td><td class="p-3.5 text-amber-400">Médio[cite: 8]</td><td class="p-3.5">08/10/2026[cite: 8]</td><td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800">Sim[cite: 8]</span></td></tr>
+            <tr class="hover:bg-[#1a1e26] transition-all"><td class="p-3.5 font-bold text-slate-100">Manutenção</td><td class="p-3.5">Dobradeira 03 necessita manutenção</td><td class="p-3.5 text-red-400">Alto[cite: 8]</td><td class="p-3.5">2026-10-09[cite: 8]</td><td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] bg-red-950 text-red-400 border border-red-800">Não[cite: 8]</span></td></tr>
+            <tr class="hover:bg-[#1a1e26] transition-all"><td class="p-3.5 font-bold text-slate-100">Estoque baixo</td><td class="p-3.5">Alumínio 6061 em quantidade crítica</td><td class="p-3.5 text-red-400">Alto[cite: 8]</td><td class="p-3.5">2026-10-09[cite: 8]</td><td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] bg-red-950 text-red-400 border border-red-800">Não[cite: 8]</span></td></tr>
+            <tr class="hover:bg-[#1a1e26] transition-all"><td class="p-3.5 font-bold text-slate-100">Prazo</td><td class="p-3.5">Pedido 105 atrasado</td><td class="p-3.5 text-red-400">Alto[cite: 8]</td><td class="p-3.5 text-slate-500 italic">-</td><td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] bg-red-950 text-red-400 border border-red-800">Não[cite: 8]</span></td></tr>
+            <tr class="hover:bg-[#1a1e26] transition-all"><td class="p-3.5 font-bold text-slate-100">Máquina parada</td><td class="p-3.5">Guilhotina 02 parada</td><td class="p-3.5 text-slate-500 italic">-</td><td class="p-3.5">2026-10-10[cite: 8]</td><td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] bg-red-950 text-red-400 border border-red-800">Não[cite: 8]</span></td></tr>
+            <tr class="hover:bg-[#1a1e26] transition-all"><td class="p-3.5 font-bold text-slate-100">Qualidade</td><td class="p-3.5">Chapa com espessura fora do padrão</td><td class="p-3.5 text-amber-400">Médio[cite: 8]</td><td class="p-3.5">2026-10-10[cite: 8]</td><td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800">Sim[cite: 8]</span></td></tr>
+            <tr class="hover:bg-[#1a1e26] transition-all"><td class="p-3.5 font-bold text-slate-100">Estoque baixo</td><td class="p-3.5">Quantidade de aço carbono insuficiente</td><td class="p-3.5 text-slate-400">baixo[cite: 8]</td><td class="p-3.5">2026-10-11[cite: 8]</td><td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] bg-red-950 text-red-400 border border-red-800">Não[cite: 8]</span></td></tr>
+            <tr class="hover:bg-[#1a1e26] transition-all"><td class="p-3.5 font-bold text-slate-100">Manutenção</td><td class="p-3.5">Laser 03 necessita revisão</td><td class="p-3.5 text-red-400">Alto[cite: 8]</td><td class="p-3.5">2026/10/11[cite: 8]</td><td class="p-3.5 text-slate-500 italic">-</td></tr>
+            <tr class="hover:bg-[#1a1e26] transition-all"><td class="p-3.5 font-bold text-slate-100">Prazo</td><td class="p-3.5">Entrega prevista para amanhã</td><td class="p-3.5 text-amber-400">Médio[cite: 8]</td><td class="p-3.5">2026-10-12[cite: 8]</td><td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] bg-red-950 text-red-400 border border-red-800">Não[cite: 8]</span></td></tr>
+            <tr class="hover:bg-[#1a1e26] transition-all"><td class="p-3.5 font-bold text-slate-100">Estoque baixo</td><td class="p-3.5">Inox 304 abaixo do estoque mínimo</td><td class="p-3.5 text-slate-500 italic">-</td><td class="p-3.5">2026-10-12[cite: 8]</td><td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] bg-red-950 text-red-400 border border-red-800">Não[cite: 8]</span></td></tr>
+            <tr class="hover:bg-[#1a1e26] transition-all"><td class="p-3.5 font-bold text-slate-100">Máquina parada</td><td class="p-3.5">Plasma 01 apresentou falha</td><td class="p-3.5 text-red-400">Alto[cite: 8]</td><td class="p-3.5">2026-10-13[cite: 8]</td><td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800">Sim[cite: 8]</span></td></tr>
+            <tr class="hover:bg-[#1a1e26] transition-all"><td class="p-3.5 font-bold text-slate-100">Qualidade</td><td class="p-3.5">Material recebido com espessura incorreta</td><td class="p-3.5 text-amber-400">Medio[cite: 8]</td><td class="p-3.5 text-slate-500 italic">-</td><td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] bg-red-950 text-red-400 border border-red-800">Não[cite: 8]</span></td></tr>
+            <tr class="hover:bg-[#1a1e26] transition-all"><td class="p-3.5 font-bold text-slate-100">Estoque</td><td class="p-3.5">Quantidade negativa detectada</td><td class="p-3.5 text-red-400">Alto[cite: 8]</td><td class="p-3.5">2026-10-14[cite: 8]</td><td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] bg-red-950 text-red-400 border border-red-800">Não[cite: 8]</span></td></tr>
+            <tr class="hover:bg-[#1a1e26] transition-all"><td class="p-3.5 font-bold text-slate-100">Prazo</td><td class="p-3.5">Pedido 110 fora do prazo</td><td class="p-3.5 text-red-400">Alto[cite: 8]</td><td class="p-3.5">2026-10-14[cite: 8]</td><td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800">Sim[cite: 8]</span></td></tr>
+            <tr class="hover:bg-[#1a1e26] transition-all"><td class="p-3.5 font-bold text-slate-100">Manutenção</td><td class="p-3.5">Serra Industrial 02 precisa de manutenção</td><td class="p-3.5 text-slate-500 italic">-</td><td class="p-3.5">2026-10-15[cite: 8]</td><td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] bg-red-950 text-red-400 border border-red-800">Não[cite: 8]</span></td></tr>
+            <tr class="hover:bg-[#1a1e26] transition-all"><td class="p-3.5 font-bold text-slate-100">Estoque baixo</td><td class="p-3.5">Chapa galvanizada abaixo do mínimo</td><td class="p-3.5 text-amber-400">Médio[cite: 8]</td><td class="p-3.5">15/10/2026[cite: 8]</td><td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] bg-red-950 text-red-400 border border-red-800">Não[cite: 8]</span></td></tr>
+            <tr class="hover:bg-[#1a1e26] transition-all"><td class="p-3.5 font-bold text-slate-100">Máquina parada</td><td class="p-3.5">Dobradeira 05 parada inesperadamente</td><td class="p-3.5 text-red-400">Alto[cite: 8]</td><td class="p-3.5">2026-10-16[cite: 8]</td><td class="p-3.5 text-slate-500 italic">-</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="js/alertas.js"></script>
+</body>
+</html>

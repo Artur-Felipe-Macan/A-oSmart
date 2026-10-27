@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AçoSmart - Parque de Máquinas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/maquinas.css">
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col bg-[#0d0f12] text-slate-300">
+
+  <header class="bg-[#14171d] border-b border-[#242832] px-4 py-2.5 flex items-center justify-between shadow-md z-20 shrink-0">
+    <div class="flex items-center space-x-3">
+      <a href="materiais.html" class="px-2.5 py-1.5 bg-[#1b1e26] hover:bg-[#252934] text-slate-300 rounded border border-[#2a2e39] text-xs font-mono-tech flex items-center gap-1.5">
+        <span>← Voltar</span>
+      </a>
+      <div class="px-2.5 py-1 bg-[#222733] border border-[#373d4d] rounded text-slate-200 font-mono-tech font-bold text-sm tracking-wider">
+        <span>⚙️ AÇOSMART</span>
+      </div>
+      <div class="h-4 w-[1px] bg-[#2a2e39]"></div>
+      
+      <nav class="flex items-center gap-1 font-mono-tech text-xs">
+        <a href="alertas.html" class="px-3 py-1.5 rounded text-slate-400 hover:text-slate-200 hover:bg-[#1b1e26]">Alertas</a>
+        <a href="pedidos.html" class="px-3 py-1.5 rounded text-slate-400 hover:text-slate-200 hover:bg-[#1b1e26]">Pedidos</a>
+        <a href="materiais.html" class="px-3 py-1.5 rounded text-slate-400 hover:text-slate-200 hover:bg-[#1b1e26]">Materiais</a>
+        <a href="maquinas.html" class="px-3 py-1.5 rounded bg-[#222733] text-blue-400 font-bold border border-[#373d4d]">Máquinas</a>
+        <a href="usuarios.html" class="px-3 py-1.5 rounded text-slate-400 hover:text-slate-200 hover:bg-[#1b1e26]">Usuários</a>
+        <a href="fornecedores.html" class="px-3 py-1.5 rounded text-slate-400 hover:text-slate-200 hover:bg-[#1b1e26]">Fornecedores</a>
+        <a href="clientes.html" class="px-3 py-1.5 rounded text-slate-400 hover:text-slate-200 hover:bg-[#1b1e26]">Clientes</a>
+        <a href="oficina.html" class="px-3 py-1.5 rounded text-slate-400 hover:text-slate-200 hover:bg-[#1b1e26]">Oficina</a>
+      </nav>
+    </div>
+
+    <div class="flex items-center gap-3 font-mono-tech text-xs">
+      <span id="userDisplay" class="text-slate-400">Operador: Admin</span>
+      <a href="login.html" class="px-2.5 py-1 bg-[#1b1e26] hover:bg-[#252934] border border-[#2a2e39] rounded text-slate-300">Sair</a>
+    </div>
+  </header>
+
+  <main class="flex-1 p-6 overflow-y-auto industrial-grid">
+    <div class="max-w-6xl mx-auto space-y-6">
+      <div class="flex items-center justify-between border-b border-[#222631] pb-4">
+        <div>
+          <h2 class="text-xl font-bold font-mono-tech text-slate-100">⚙️ Parque de Máquinas Industriais</h2>
+          <p class="text-xs text-slate-400 font-mono-tech mt-1">Especificações técnicas e calibração das estações</p>
+        </div>
+      </div>
+
+      <div class="bg-[#14171d] border border-[#222631] rounded overflow-hidden shadow-lg">
+        <table class="w-full text-left font-mono-tech text-xs">
+          <thead class="bg-[#1a1e28] text-slate-400 border-b border-[#222631] uppercase text-[11px]">
+            <tr>
+              <th class="p-3.5">Equipamento</th>
+              <th class="p-3.5">Tipo de Processo</th>
+              <th class="p-3.5">Capacidade Máxima</th>
+              <th class="p-3.5">Status Operacional</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[#222631] text-slate-300">
+            <tr class="hover:bg-[#1a1e26]"><td class="p-3.5 font-bold text-slate-100">Prensa Mecânica 200T</td><td class="p-3.5">Estampagem</td><td class="p-3.5">12mm</td><td class="p-3.5 text-emerald-400">Operacional</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+  <script src="js/maquinas.js"></script>
+</body>
+</html>
