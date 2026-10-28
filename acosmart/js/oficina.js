@@ -1,4 +1,4 @@
-// --- 1. MATERIAIS COM TEXTURAS METÁLICAS SÓBRIAS[cite: 6] ---
+// --- 1. MATERIAIS COM TEXTURAS METÁLICAS SÓBRIAS ---
 const MATERIALS = {
   CARBON_STEEL: {
     id: 'CARBON_STEEL',
@@ -37,15 +37,15 @@ const MATERIALS = {
   }
 };
 
-// --- 2. PRODUTOS E MOLDES INDUSTRIAIS[cite: 6] ---
+// --- 2. PRODUTOS E MOLDES INDUSTRIAIS ---
 const OBJECTS = {
-  GEAR: { id: 'GEAR', name: 'Engrenagem', icon: 'settings', width: 44, height: 44 },
-  PERFORATED_SHEET: { id: 'PERFORATED_SHEET', name: 'Painel Perfurado', icon: 'grid', width: 50, height: 38 },
-  CYLINDER_PIPE: { id: 'CYLINDER_PIPE', name: 'Cano / Tubo', icon: 'cylinder', width: 56, height: 28 },
-  ANGULAR_BRACKET: { id: 'ANGULAR_BRACKET', name: 'Suporte Angular', icon: 'square-code', width: 42, height: 42 }
+  GEAR: { id: 'GEAR', name: 'Engrenagem', width: 44, height: 44 },
+  PERFORATED_SHEET: { id: 'PERFORATED_SHEET', name: 'Painel Perfurado', width: 50, height: 38 },
+  CYLINDER_PIPE: { id: 'CYLINDER_PIPE', name: 'Cano / Tubo', width: 56, height: 28 },
+  ANGULAR_BRACKET: { id: 'ANGULAR_BRACKET', name: 'Suporte Angular', width: 42, height: 42 }
 };
 
-// --- 3. MÁQUINAS E REGRAS TÉCNICAS[cite: 6] ---
+// --- 3. MÁQUINAS E REGRAS TÉCNicas ---
 const MACHINES_INFO = {
   PRESS: { id: 'PRESS', name: 'Prensa Mecânica', color: '#a37b31' },
   GUILLOTINE: { id: 'GUILLOTINE', name: 'Guilhotina', color: '#505869' },
@@ -55,31 +55,17 @@ const MACHINES_INFO = {
 
 function analyzeEngineering(materialId, objectId) {
   let machine = 'LASER';
-  let reason = '';
-
   if (materialId === 'COPPER' || materialId === 'BRASS') {
     machine = 'PRESS';
-    reason = 'A Prensa Mecânica de alta tonelagem é ideal para estampagem fria em ligas dúcteis (Cobre/Latão)[cite: 6].';
   } else if (materialId === 'HSLA_STEEL') {
     machine = 'PLASMA';
-    reason = 'O Cortador a Plasma com feixe térmico é necessário para atravessar o Aço ARBL de alta resistência[cite: 6].';
-  } else if (objectId === 'CYLINDER_PIPE' || materialId === 'ALUMINUM' || materialId === 'GALVANIZED_STEEL') {
-    if (objectId === 'CYLINDER_PIPE') {
-      machine = 'GUILLOTINE';
-      reason = 'A Guilhotina executa o seccionamento reto e preciso do perfil de cano/tubo[cite: 6].';
-    } else {
-      machine = 'LASER';
-      reason = 'O Cortador a Laser CO2 oferece máxima precisão dimensional para o perfil selecionado[cite: 6].';
-    }
-  } else {
-    machine = 'LASER';
-    reason = 'O Cortador a Laser CO2 garante tolerâncias micrométricas na liga metálica selecionada[cite: 6].';
+  } else if (objectId === 'CYLINDER_PIPE') {
+    machine = 'GUILLOTINE';
   }
-
-  return { machine, reason };
+  return { machine };
 }
 
-// --- 4. SINTETIZADOR DE ÁUDIO[cite: 6] ---
+// --- 4. SINTETIZADOR DE ÁUDIO ---
 class SoundEngine {
   constructor() { this.ctx = null; this.enabled = true; }
   init() {
@@ -105,23 +91,6 @@ class SoundEngine {
     gain.connect(this.ctx.destination);
     osc.start(now);
     osc.stop(now + 0.25);
-  }
-  playDrop() {
-    if (!this.enabled) return;
-    this.init();
-    if (!this.ctx) return;
-    const now = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(180, now);
-    osc.frequency.exponentialRampToValueAtTime(80, now + 0.08);
-    gain.gain.setValueAtTime(0.2, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.08);
   }
 }
 
@@ -222,15 +191,51 @@ function drawItem(mainCtx, item) {
   const mat = item.material;
   if (item.type === 'SHEET') {
     const w = item.width, h = item.height;
-    offscreenCanvas.width = w + 20; offscreenCanvas.height = h + 20;
+    offscreenCanvas.width = w + 20; 
+    offscreenCanvas.height = h + 20;
     offCtx.clearRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+    
     offCtx.save();
     offCtx.translate(offscreenCanvas.width / 2, offscreenCanvas.height / 2);
-    offCtx.beginPath(); offCtx.roundRect(-w / 2, -h / 2, w, h, 4);
     
+    // Desenhar corpo principal da chapa
+    offCtx.beginPath(); 
+    offCtx.roundRect(-w / 2, -h / 2, w, h, 4);
     const grad = offCtx.createLinearGradient(-w / 2, -h / 2, w / 2, h / 2);
-    grad.addColorStop(0, mat.palette.light); grad.addColorStop(1, mat.palette.dark);
-    offCtx.fillStyle = grad; offCtx.fill();
+    grad.addColorStop(0, mat.palette.light); 
+    grad.addColorStop(1, mat.palette.dark);
+    offCtx.fillStyle = grad; 
+    offCtx.fill();
+    offCtx.strokeStyle = mat.palette.dark;
+    offCtx.lineWidth = 2;
+    offCtx.stroke();
+
+    // DESENHAR OS FUROS / RECORTES DE NESTING NA CHAPA (Grelha 3x2 para até 6 slots)
+    if (item.holes && item.holes.length > 0) {
+      item.holes.forEach((hole, idx) => {
+        const col = idx % 3;
+        const row = Math.floor(idx / 3);
+        const cellW = w / 3;
+        const cellH = h / 2;
+        const hx = -w / 2 + cellW * col + cellW / 2;
+        const hy = -h / 2 + cellH * row + cellH / 2;
+
+        offCtx.save();
+        offCtx.translate(hx, hy);
+        
+        // Interior do furo (recorte escuro simulando a profundidade do corte laser/plasma)
+        offCtx.fillStyle = '#080a0f';
+        offCtx.strokeStyle = '#1a1d24';
+        offCtx.lineWidth = 1.5;
+        
+        drawShapePath(offCtx, hole.objectType, hole.w * 0.85, hole.h * 0.85);
+        offCtx.fill();
+        offCtx.stroke();
+        
+        offCtx.restore();
+      });
+    }
+
     offCtx.restore();
 
     mainCtx.save();
@@ -242,7 +247,11 @@ function drawItem(mainCtx, item) {
     mainCtx.save();
     mainCtx.translate(item.x, item.y);
     drawShapePath(mainCtx, item.objectType, w, h);
-    mainCtx.fillStyle = mat.palette.main; mainCtx.fill();
+    mainCtx.fillStyle = mat.palette.main; 
+    mainCtx.fill();
+    mainCtx.strokeStyle = mat.palette.light;
+    mainCtx.lineWidth = 1;
+    mainCtx.stroke();
     mainCtx.restore();
   }
 }
@@ -284,12 +293,37 @@ function render() {
 
 function updateNestingUI() {
   const slotsUsed = currentSheetItem ? currentSheetItem.holes.length : 0;
-  document.getElementById('sheet-slot-counter').innerText = `Slot ${slotsUsed + 1} de ${MAX_SLOTS}`;
-  document.getElementById('sheet-usage-bar').style.width = `${(slotsUsed / MAX_SLOTS) * 100}%`;
+  const counterEl = document.getElementById('sheet-slot-counter');
+  const barEl = document.getElementById('sheet-usage-bar');
+  const btnFabricate = document.getElementById('btn-fabricate');
+
+  if (counterEl) counterEl.innerText = `Slot ${slotsUsed} de ${MAX_SLOTS}`;
+  if (barEl) barEl.style.width = `${(slotsUsed / MAX_SLOTS) * 100}%`;
+
+  if (slotsUsed >= MAX_SLOTS) {
+    if (btnFabricate) {
+      btnFabricate.disabled = true;
+      btnFabricate.classList.add('opacity-50', 'cursor-not-allowed');
+      btnFabricate.innerText = '⚠️ CHAPA ESGOTADA (INICIE NOVA)';
+    }
+  } else {
+    if (btnFabricate) {
+      btnFabricate.disabled = false;
+      btnFabricate.classList.remove('opacity-50', 'cursor-not-allowed');
+      btnFabricate.innerText = '🛠️ EXECUTAR USINAGEM E CORTE';
+    }
+  }
 }
 
 function processManufacturing() {
   sound.init();
+  const currentSlots = currentSheetItem ? currentSheetItem.holes.length : 0;
+  
+  if (currentSlots >= MAX_SLOTS) {
+    alert('A chapa atual atingiu o limite máximo de 6 slots! Descarte a chapa na lixeira para iniciar uma nova.');
+    return;
+  }
+
   const mat = MATERIALS[selectedMaterialKey];
   const obj = OBJECTS[selectedObjectKey];
   const analysis = analyzeEngineering(selectedMaterialKey, selectedObjectKey);
@@ -305,16 +339,60 @@ function processManufacturing() {
       };
       items.push(currentSheetItem);
     }
-    const slotIdx = currentSheetItem.holes.length;
-    currentSheetItem.holes.push({ relX: 0, relY: 0, objectType: obj.id, w: obj.width, h: obj.height });
+    // Adicionar o furo na chapa correspondente ao slot
+    currentSheetItem.holes.push({ objectType: obj.id, w: obj.width, h: obj.height });
     
+    // Gerar o produto cortado para fora
     items.push({
-      id: 'prod_' + Date.now(), type: 'PRODUCT', x: currentSheetItem.x, y: currentSheetItem.y + 65,
+      id: 'prod_' + Date.now(), type: 'PRODUCT', x: currentSheetItem.x + 30, y: currentSheetItem.y + 65,
       width: obj.width, height: obj.height, material: mat, objectType: obj.id
     });
     updateNestingUI();
   });
 }
+
+// Configuração de Arraste (Drag & Drop) com Mouse/Toque no Canvas
+canvas.addEventListener('mousedown', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  
+  for (let i = items.length - 1; i >= 0; i--) {
+    const item = items[i];
+    const halfW = (item.width || 50) / 2;
+    const halfH = (item.height || 50) / 2;
+    if (mx >= item.x - halfW && mx <= item.x + halfW && my >= item.y - halfH && my <= item.y + halfH) {
+      draggedItem = item;
+      dragOffset.x = item.x - mx;
+      dragOffset.y = item.y - my;
+      items.splice(i, 1);
+      items.push(draggedItem);
+      break;
+    }
+  }
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (!draggedItem) return;
+  const rect = canvas.getBoundingClientRect();
+  draggedItem.x = (e.clientX - rect.left) + dragOffset.x;
+  draggedItem.y = (e.clientY - rect.top) + dragOffset.y;
+});
+
+window.addEventListener('mouseup', () => {
+  if (draggedItem) {
+    // Zona de lixo / descarte
+    if (zones.trash && draggedItem.x >= zones.trash.x && draggedItem.x <= zones.trash.x + zones.trash.w &&
+        draggedItem.y >= zones.trash.y && draggedItem.y <= zones.trash.y + zones.trash.h) {
+      items = items.filter(i => i.id !== draggedItem.id);
+      if (currentSheetItem && currentSheetItem.id === draggedItem.id) {
+        currentSheetItem = null;
+      }
+      updateNestingUI();
+    }
+    draggedItem = null;
+  }
+});
 
 function initUIControls() {
   const matContainer = document.getElementById('material-selector');
@@ -323,7 +401,7 @@ function initUIControls() {
     const mat = MATERIALS[key];
     const btn = document.createElement('button');
     btn.className = `p-2 rounded border text-left flex items-center gap-2 text-xs font-mono-tech transition-all ${selectedMaterialKey === key ? 'bg-[#222733] border-slate-400 text-white font-bold' : 'bg-[#14171d] border-[#222631] text-slate-400'}`;
-    btn.innerHTML = `<span class="w-3 h-3 rounded-full" style="background:${mat.palette.main}"></span><span>${mat.name}</span>`;
+    btn.innerHTML = `<span class="w-3 h-3 rounded-full inline-block" style="background:${mat.palette.main}"></span><span>${mat.name}</span>`;
     btn.addEventListener('click', () => { selectedMaterialKey = key; initUIControls(); });
     matContainer.appendChild(btn);
   });

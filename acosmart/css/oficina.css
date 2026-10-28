@@ -43,6 +43,3 @@ body {
   background: #2a2e39;
   border-radius: 2px;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: #3f4452;
-}
