@@ -99,8 +99,7 @@ const sound = new SoundEngine();
 
 let selectedMaterialKey = 'STAINLESS_STEEL';
 let selectedObjectKey = 'GEAR';
-let items = [];
-let finishedProducts = [];
+let items = []; // Contém chapas e produtos livres para arrastar e posicionar
 let machines = [];
 let zones = {};
 let draggedItem = null;
@@ -250,6 +249,17 @@ function drawItem(mainCtx, item) {
     mainCtx.translate(item.x, item.y);
     mainCtx.drawImage(offscreenCanvas, -offscreenCanvas.width / 2, -offscreenCanvas.height / 2);
     mainCtx.restore();
+  } else if (item.type === 'PRODUCT') {
+    const w = item.width, h = item.height;
+    mainCtx.save();
+    mainCtx.translate(item.x, item.y);
+    drawShapePath(mainCtx, item.objectType, w, h);
+    mainCtx.fillStyle = mat.palette.main; 
+    mainCtx.fill();
+    mainCtx.strokeStyle = mat.palette.light;
+    mainCtx.lineWidth = 1;
+    mainCtx.stroke();
+    mainCtx.restore();
   }
 }
 
@@ -257,9 +267,9 @@ function setupLayout() {
   const container = document.querySelector('main');
   canvas.width = container.clientWidth;
   canvas.height = container.clientHeight;
-  const margin = 16, topH = 65;
+  const margin = 16, topH = 85; // Aumentada ligeiramente a altura da zona de estoque para acomodar as divisões
 
-  zones.finished = { title: 'ESTOQUE DE PRODUTOS ACABADOS', x: margin, y: margin, w: container.clientWidth * 0.65 - margin, h: topH };
+  zones.finished = { title: 'ESTOQUE DE PRODUTOS ACABADOS (SEPARADO POR TIPO E FORMATO)', x: margin, y: margin, w: container.clientWidth * 0.65 - margin, h: topH };
   zones.trash = { title: 'ÁREA DE DESCARTE / RECICLAGEM', x: zones.finished.x + zones.finished.w + margin, y: margin, w: container.clientWidth - (zones.finished.x + zones.finished.w + margin * 2), h: topH };
 
   machines = [];
@@ -297,26 +307,20 @@ function render() {
     ctx.restore();
   });
 
+  // Linhas divisórias internas discretas na zona de estoque para separar visualmente por tipo/formato
+  ctx.save();
+  ctx.strokeStyle = '#1a1f2c';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(zones.finished.x + zones.finished.w * 0.35, zones.finished.y + 24);
+  ctx.lineTo(zones.finished.x + zones.finished.w * 0.35, zones.finished.y + zones.finished.h - 8);
+  ctx.moveTo(zones.finished.x + zones.finished.w * 0.70, zones.finished.y + 24);
+  ctx.lineTo(zones.finished.x + zones.finished.w * 0.70, zones.finished.y + zones.finished.h - 8);
+  ctx.stroke();
+  ctx.restore();
+
   machines.forEach(m => m.draw(ctx));
   items.forEach(item => drawItem(ctx, item));
-
-  finishedProducts.forEach((prod, idx) => {
-    const startX = zones.finished.x + 20;
-    const startY = zones.finished.y + 38;
-    const spacingX = 48;
-    const col = idx % 12;
-    const row = Math.floor(idx / 12);
-    
-    ctx.save();
-    ctx.translate(startX + col * spacingX, startY + row * 24);
-    drawShapePath(ctx, prod.objectType, prod.width * 0.6, prod.height * 0.6);
-    ctx.fillStyle = prod.material.palette.main; 
-    ctx.fill();
-    ctx.strokeStyle = prod.material.palette.light;
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    ctx.restore();
-  });
 
   requestAnimationFrame(render);
 }
@@ -357,7 +361,7 @@ function processManufacturing(forceNewSheet = false) {
   const sheetW = 160, sheetH = 95;
 
   if (forceNewSheet) {
-    currentSheetItem = null; // Força a deseleção para abrir uma chapa nova do mesmo material
+    currentSheetItem = null;
   }
 
   if (currentSheetItem && (currentSheetItem.holes.length >= MAX_SLOTS || currentSheetItem.material.id !== mat.id)) {
@@ -401,18 +405,33 @@ function processManufacturing(forceNewSheet = false) {
   targetMachine.startOperation(() => {
     currentSheetItem.holes.push({ objectType: obj.id, w: obj.width, h: obj.height });
     
-    finishedProducts.push({
+    // ORGANIZAÇÃO INTELIGENTE NO ESTOQUE:
+    // Agrupa e separa automaticamente os produtos gerados por tipo de material e formato em colunas organizadas dentro da zona de estoque
+    const materialKeys = Object.keys(MATERIALS);
+    const matIndex = materialKeys.indexOf(selectedMaterialKey);
+    const objectKeys = Object.keys(OBJECTS);
+    const objIndex = objectKeys.indexOf(selectedObjectKey);
+
+    const baseStockX = zones.finished.x + 25 + (matIndex * 50);
+    const baseStockY = zones.finished.y + 35 + (objIndex * 18);
+    const offsetCluster = items.filter(i => i.type === 'PRODUCT' && i.material.id === mat.id && i.objectType === obj.id).length * 12;
+
+    items.push({
+      id: 'prod_' + Date.now(),
+      type: 'PRODUCT',
+      x: baseStockX + (offsetCluster % 60),
+      y: baseStockY + Math.floor(offsetCluster / 60) * 15,
+      width: obj.width * 0.55,
+      height: obj.height * 0.55,
       material: mat,
-      objectType: obj.id,
-      width: obj.width,
-      height: obj.height
+      objectType: obj.id
     });
 
     updateNestingUI();
   });
 }
 
-// Configuração de Arraste (Drag & Drop) e Deseleção ao clicar no vazio
+// Configuração de Arraste (Drag & Drop), Seleção e Exclusão na Lixeira
 canvas.addEventListener('mousedown', (e) => {
   const rect = canvas.getBoundingClientRect();
   const mx = e.clientX - rect.left;
@@ -443,7 +462,6 @@ canvas.addEventListener('mousedown', (e) => {
     }
   }
 
-  // DESELEÇÃO NO VAZIO: Se clicar fora de qualquer item, deseleciona a chapa ativa
   if (!clickedOnItem) {
     currentSheetItem = null;
     updateNestingUI();
@@ -494,7 +512,6 @@ function initUIControls() {
     objContainer.appendChild(btn);
   });
 
-  // Adicionar botão para forçar nova chapa na barra lateral
   const sidebar = document.querySelector('aside');
   let newSheetBtn = document.getElementById('btn-new-sheet');
   if (!newSheetBtn && sidebar) {
@@ -504,7 +521,6 @@ function initUIControls() {
     newSheetBtn.innerText = '➕ CRIAR NOVA CHAPA';
     newSheetBtn.addEventListener('click', () => processManufacturing(true));
     
-    // Insere antes do botão de fabricação
     const fabBtn = document.getElementById('btn-fabricate');
     if (fabBtn) {
       fabBtn.parentNode.insertBefore(newSheetBtn, fabBtn);
