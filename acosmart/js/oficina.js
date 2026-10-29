@@ -1,4 +1,4 @@
-// --- 1. MATERIAIS COM TEXTURAS METÁLICAS SÓBRIAS ---
+// --- 1. MATERIAIS COM CORES METÁLICAS DISTINTAS ---
 const MATERIALS = {
   CARBON_STEEL: {
     id: 'CARBON_STEEL',
@@ -39,30 +39,31 @@ const MATERIALS = {
 
 // --- 2. PRODUTOS E MOLDES INDUSTRIAIS ---
 const OBJECTS = {
-  GEAR: { id: 'GEAR', name: 'Engrenagem', width: 44, height: 44 },
-  PERFORATED_SHEET: { id: 'PERFORATED_SHEET', name: 'Painel Perfurado', width: 50, height: 38 },
-  CYLINDER_PIPE: { id: 'CYLINDER_PIPE', name: 'Cano / Tubo', width: 56, height: 28 },
-  ANGULAR_BRACKET: { id: 'ANGULAR_BRACKET', name: 'Suporte Angular', width: 42, height: 42 }
+  GEAR: { id: 'GEAR', name: 'Engrenagem', width: 42, height: 42 },
+  PERFORATED_SHEET: { id: 'PERFORATED_SHEET', name: 'Painel Perfurado', width: 46, height: 36 },
+  CYLINDER_PIPE: { id: 'CYLINDER_PIPE', name: 'Cano / Tubo', width: 52, height: 24 },
+  ANGULAR_BRACKET: { id: 'ANGULAR_BRACKET', name: 'Suporte Angular', width: 40, height: 40 }
 };
 
-// --- 3. MÁQUINAS E REGRAS TÉCNicas ---
+// --- 3. PARQUE INDUSTRIAL ---
 const MACHINES_INFO = {
   PRESS: { id: 'PRESS', name: 'Prensa Mecânica', color: '#a37b31' },
   GUILLOTINE: { id: 'GUILLOTINE', name: 'Guilhotina', color: '#505869' },
   LASER: { id: 'LASER', name: 'Cortador a Laser CO2', color: '#8a94a6' },
-  PLASMA: { id: 'PLASMA', name: 'Cortador a Plasma', color: '#475569' }
+  PLASMA: { id: 'PLASMA', name: 'Cortador a Plasma', color: '#475569' },
+  INDUSTRIAL_SAW: { id: 'INDUSTRIAL_SAW', name: 'Serra Industrial', color: '#64748b' },
+  BAND_SAW: { id: 'BAND_SAW', name: 'Serra Fita', color: '#334155' },
+  HYDRAULIC_PRESS: { id: 'HYDRAULIC_PRESS', name: 'Prensa Hidráulica', color: '#d97706' },
+  BENDER: { id: 'BENDER', name: 'Dobradeira CNC', color: '#475569' }
 };
 
-function analyzeEngineering(materialId, objectId) {
-  let machine = 'LASER';
-  if (materialId === 'COPPER' || materialId === 'BRASS') {
-    machine = 'PRESS';
-  } else if (materialId === 'HSLA_STEEL') {
-    machine = 'PLASMA';
-  } else if (objectId === 'CYLINDER_PIPE') {
-    machine = 'GUILLOTINE';
-  }
-  return { machine };
+function getCompatibleMachines(materialId, objectId) {
+  if (objectId === 'CYLINDER_PIPE') return ['BAND_SAW', 'INDUSTRIAL_SAW'];
+  if (objectId === 'PERFORATED_SHEET') return ['LASER', 'PLASMA'];
+  if (objectId === 'ANGULAR_BRACKET') return ['BENDER', 'PRESS'];
+  if (materialId === 'COPPER' || materialId === 'BRASS') return ['HYDRAULIC_PRESS', 'PRESS'];
+  if (materialId === 'HSLA_STEEL') return ['INDUSTRIAL_SAW', 'PLASMA'];
+  return ['LASER', 'PRESS', 'GUILLOTINE', 'BENDER'];
 }
 
 // --- 4. SINTETIZADOR DE ÁUDIO ---
@@ -82,10 +83,10 @@ class SoundEngine {
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
-    osc.type = type === 'PRESS' ? 'sawtooth' : 'sine';
-    osc.frequency.setValueAtTime(140, now);
-    osc.frequency.exponentialRampToValueAtTime(30, now + 0.25);
-    gain.gain.setValueAtTime(0.6, now);
+    osc.type = type.includes('PRESS') ? 'sawtooth' : 'sine';
+    osc.frequency.setValueAtTime(130, now);
+    osc.frequency.exponentialRampToValueAtTime(20, now + 0.25);
+    gain.gain.setValueAtTime(0.5, now);
     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
     osc.connect(gain);
     gain.connect(this.ctx.destination);
@@ -99,6 +100,7 @@ const sound = new SoundEngine();
 let selectedMaterialKey = 'STAINLESS_STEEL';
 let selectedObjectKey = 'GEAR';
 let items = [];
+let finishedProducts = [];
 let machines = [];
 let zones = {};
 let draggedItem = null;
@@ -116,12 +118,12 @@ class MachineStation {
     this.id = id; this.x = x; this.y = y; this.width = width; this.height = height;
     this.type = type; this.isWorking = false; this.animProgress = 0;
   }
-  getBedCenter() { return { x: this.x + this.width / 2, y: this.y + 70 }; }
-  startOperation(material, object, onComplete) {
+  getBedCenter() { return { x: this.x + this.width / 2, y: this.y + 75 }; }
+  startOperation(onComplete) {
     this.isWorking = true;
     this.animProgress = 0;
     const animate = () => {
-      this.animProgress += 0.08;
+      this.animProgress += 0.07;
       if (this.animProgress >= 0.5 && !this.soundTriggered) {
         this.soundTriggered = true;
         sound.playMachine(this.type);
@@ -141,20 +143,21 @@ class MachineStation {
     const { x, y, width, height, type } = this;
     const info = MACHINES_INFO[type];
     ctx.save();
-    ctx.fillStyle = '#161920'; ctx.fillRect(x, y, width, height);
-    ctx.strokeStyle = '#282d3a'; ctx.lineWidth = 1.5; ctx.strokeRect(x, y, width, height);
-    ctx.fillStyle = '#1c202a'; ctx.fillRect(x, y, width, 24);
-    ctx.fillStyle = info.color; ctx.fillRect(x, y, width, 3);
-    ctx.fillStyle = '#9ca3af'; ctx.font = 'bold 9px "JetBrains Mono", monospace';
-    ctx.textAlign = 'center'; ctx.fillText(info.name.toUpperCase(), x + width / 2, y + 16);
+    ctx.fillStyle = '#141820'; ctx.fillRect(x, y, width, height);
+    ctx.strokeStyle = '#2d3748'; ctx.lineWidth = 2; ctx.strokeRect(x, y, width, height);
     
-    const bedX = x + 8, bedY = y + 32, bedW = width - 16, bedH = 80;
-    ctx.fillStyle = '#0a0b0e'; ctx.fillRect(bedX, bedY, bedW, bedH);
-    ctx.strokeStyle = '#1d212b'; ctx.strokeRect(bedX, bedY, bedW, bedH);
+    ctx.fillStyle = '#1e2533'; ctx.fillRect(x, y, width, 32);
+    ctx.fillStyle = info.color; ctx.fillRect(x, y, width, 4);
+    ctx.fillStyle = '#e2e8f0'; ctx.font = 'bold 11px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center'; ctx.fillText(info.name.toUpperCase(), x + width / 2, y + 20);
+    
+    const bedX = x + 10, bedY = y + 38, bedW = width - 20, bedH = height - 48;
+    ctx.fillStyle = '#090a0f'; ctx.fillRect(bedX, bedY, bedW, bedH);
+    ctx.strokeStyle = '#1e2430'; ctx.strokeRect(bedX, bedY, bedW, bedH);
 
     if (this.isWorking) {
       const center = this.getBedCenter();
-      ctx.strokeStyle = '#d1d5db'; ctx.lineWidth = 2;
+      ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 3;
       ctx.beginPath(); ctx.moveTo(center.x, bedY + 4); ctx.lineTo(center.x, center.y); ctx.stroke();
     }
     ctx.restore();
@@ -181,7 +184,9 @@ function drawShapePath(targetCtx, shapeType, w, h) {
   } else if (shapeType === 'PERFORATED_SHEET') {
     targetCtx.rect(-w/2, -h/2, w, h);
   } else if (shapeType === 'CYLINDER_PIPE') {
-    targetCtx.roundRect(-w/2, -h/2, w, h, 4);
+    targetCtx.roundRect(-w/2, -h/2, w, h, h/2);
+    targetCtx.moveTo(w/3, -h/4);
+    targetCtx.roundRect(-w/3, -h/4, (w/3)*2, h/2, h/4);
   } else if (shapeType === 'ANGULAR_BRACKET') {
     targetCtx.moveTo(-w/2, -h/2); targetCtx.lineTo(w/2, h/2); targetCtx.lineTo(-w/2, h/2); targetCtx.closePath();
   }
@@ -198,19 +203,23 @@ function drawItem(mainCtx, item) {
     offCtx.save();
     offCtx.translate(offscreenCanvas.width / 2, offscreenCanvas.height / 2);
     
-    // Desenhar corpo principal da chapa
     offCtx.beginPath(); 
-    offCtx.roundRect(-w / 2, -h / 2, w, h, 4);
+    offCtx.roundRect(-w / 2, -h / 2, w, h, 6);
     const grad = offCtx.createLinearGradient(-w / 2, -h / 2, w / 2, h / 2);
     grad.addColorStop(0, mat.palette.light); 
     grad.addColorStop(1, mat.palette.dark);
     offCtx.fillStyle = grad; 
     offCtx.fill();
-    offCtx.strokeStyle = mat.palette.dark;
-    offCtx.lineWidth = 2;
+    
+    if (currentSheetItem && currentSheetItem.id === item.id) {
+      offCtx.strokeStyle = '#38bdf8';
+      offCtx.lineWidth = 3.5;
+    } else {
+      offCtx.strokeStyle = mat.palette.dark;
+      offCtx.lineWidth = 2;
+    }
     offCtx.stroke();
 
-    // DESENHAR OS FUROS / RECORTES DE NESTING NA CHAPA (Grelha 3x2 para até 6 slots)
     if (item.holes && item.holes.length > 0) {
       item.holes.forEach((hole, idx) => {
         const col = idx % 3;
@@ -223,12 +232,11 @@ function drawItem(mainCtx, item) {
         offCtx.save();
         offCtx.translate(hx, hy);
         
-        // Interior do furo (recorte escuro simulando a profundidade do corte laser/plasma)
-        offCtx.fillStyle = '#080a0f';
-        offCtx.strokeStyle = '#1a1d24';
+        offCtx.fillStyle = '#05070a';
+        offCtx.strokeStyle = '#111318';
         offCtx.lineWidth = 1.5;
         
-        drawShapePath(offCtx, hole.objectType, hole.w * 0.85, hole.h * 0.85);
+        drawShapePath(offCtx, hole.objectType, hole.w * 0.75, hole.h * 0.75);
         offCtx.fill();
         offCtx.stroke();
         
@@ -242,17 +250,6 @@ function drawItem(mainCtx, item) {
     mainCtx.translate(item.x, item.y);
     mainCtx.drawImage(offscreenCanvas, -offscreenCanvas.width / 2, -offscreenCanvas.height / 2);
     mainCtx.restore();
-  } else if (item.type === 'PRODUCT') {
-    const w = item.width, h = item.height;
-    mainCtx.save();
-    mainCtx.translate(item.x, item.y);
-    drawShapePath(mainCtx, item.objectType, w, h);
-    mainCtx.fillStyle = mat.palette.main; 
-    mainCtx.fill();
-    mainCtx.strokeStyle = mat.palette.light;
-    mainCtx.lineWidth = 1;
-    mainCtx.stroke();
-    mainCtx.restore();
   }
 }
 
@@ -260,34 +257,67 @@ function setupLayout() {
   const container = document.querySelector('main');
   canvas.width = container.clientWidth;
   canvas.height = container.clientHeight;
-  const margin = 12, topH = 75;
+  const margin = 16, topH = 65;
 
   zones.finished = { title: 'ESTOQUE DE PRODUTOS ACABADOS', x: margin, y: margin, w: container.clientWidth * 0.65 - margin, h: topH };
   zones.trash = { title: 'ÁREA DE DESCARTE / RECICLAGEM', x: zones.finished.x + zones.finished.w + margin, y: margin, w: container.clientWidth - (zones.finished.x + zones.finished.w + margin * 2), h: topH };
 
   machines = [];
-  const mY = topH + margin * 2;
-  const mWidth = Math.min(160, (container.clientWidth - margin * 5) / 4);
+  const mWidth = Math.min(220, (container.clientWidth - margin * 5) / 4);
+  const mHeight = 130;
   const startX = (container.clientWidth - (mWidth * 4 + margin * 3)) / 2;
-  const types = ['PRESS', 'GUILLOTINE', 'LASER', 'PLASMA'];
-  for (let i = 0; i < 4; i++) {
-    machines.push(new MachineStation(i, startX + i * (mWidth + margin), mY, mWidth, 135, types[i]));
+  
+  const types = [
+    'PRESS', 'GUILLOTINE', 'LASER', 'PLASMA',
+    'INDUSTRIAL_SAW', 'BAND_SAW', 'HYDRAULIC_PRESS', 'BENDER'
+  ];
+
+  const row1Y = topH + margin * 1.5;
+  const row2Y = row1Y + mHeight + margin;
+
+  for (let i = 0; i < types.length; i++) {
+    const col = i % 4;
+    const row = Math.floor(i / 4);
+    const mx = startX + col * (mWidth + margin);
+    const my = row === 0 ? row1Y : row2Y;
+    machines.push(new MachineStation(i, mx, my, mWidth, mHeight, types[i]));
   }
 }
 
 function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
   Object.keys(zones).forEach(k => {
     const z = zones[k];
     ctx.save();
     ctx.fillStyle = '#12151b'; ctx.strokeStyle = '#222631'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.roundRect(z.x, z.y, z.w, z.h, 4); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.roundRect(z.x, z.y, z.w, z.h, 6); ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#6b7280'; ctx.font = 'bold 9px "JetBrains Mono", monospace';
-    ctx.fillText(z.title, z.x + 10, z.y + 16);
+    ctx.fillText(z.title, z.x + 12, z.y + 18);
     ctx.restore();
   });
+
   machines.forEach(m => m.draw(ctx));
   items.forEach(item => drawItem(ctx, item));
+
+  finishedProducts.forEach((prod, idx) => {
+    const startX = zones.finished.x + 20;
+    const startY = zones.finished.y + 38;
+    const spacingX = 48;
+    const col = idx % 12;
+    const row = Math.floor(idx / 12);
+    
+    ctx.save();
+    ctx.translate(startX + col * spacingX, startY + row * 24);
+    drawShapePath(ctx, prod.objectType, prod.width * 0.6, prod.height * 0.6);
+    ctx.fillStyle = prod.material.palette.main; 
+    ctx.fill();
+    ctx.strokeStyle = prod.material.palette.light;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+  });
+
   requestAnimationFrame(render);
 }
 
@@ -304,7 +334,7 @@ function updateNestingUI() {
     if (btnFabricate) {
       btnFabricate.disabled = true;
       btnFabricate.classList.add('opacity-50', 'cursor-not-allowed');
-      btnFabricate.innerText = '⚠️ CHAPA ESGOTADA (INICIE NOVA)';
+      btnFabricate.innerText = '⚠️ CHAPA ESGOTADA (CRIE NOVA OU DESCARTE)';
     }
   } else {
     if (btnFabricate) {
@@ -315,53 +345,95 @@ function updateNestingUI() {
   }
 }
 
-function processManufacturing() {
+function processManufacturing(forceNewSheet = false) {
   sound.init();
-  const currentSlots = currentSheetItem ? currentSheetItem.holes.length : 0;
-  
-  if (currentSlots >= MAX_SLOTS) {
-    alert('A chapa atual atingiu o limite máximo de 6 slots! Descarte a chapa na lixeira para iniciar uma nova.');
+  const mat = MATERIALS[selectedMaterialKey];
+  const obj = OBJECTS[selectedObjectKey];
+
+  const compatibleTypes = getCompatibleMachines(selectedMaterialKey, selectedObjectKey);
+  const randomType = compatibleTypes[Math.floor(Math.random() * compatibleTypes.length)];
+  const targetMachine = machines.find(m => m.type === randomType) || machines[0];
+
+  const sheetW = 160, sheetH = 95;
+
+  if (forceNewSheet) {
+    currentSheetItem = null; // Força a deseleção para abrir uma chapa nova do mesmo material
+  }
+
+  if (currentSheetItem && (currentSheetItem.holes.length >= MAX_SLOTS || currentSheetItem.material.id !== mat.id)) {
+    currentSheetItem = null;
+  }
+
+  if (!currentSheetItem && !forceNewSheet) {
+    const existingSheets = items.filter(i => i.type === 'SHEET' && i.material.id === mat.id && i.holes.length < MAX_SLOTS);
+    if (existingSheets.length > 0) {
+      const useOld = confirm(`Existe uma chapa de ${mat.name} disponível com ${existingSheets[0].holes.length} slot(s) preenchido(s). Deseja reutilizá-la?`);
+      if (useOld) {
+        currentSheetItem = existingSheets[0];
+      }
+    }
+  }
+
+  if (!currentSheetItem) {
+    const bedCenter = targetMachine.getBedCenter();
+    currentSheetItem = {
+      id: 'sheet_' + Date.now(), 
+      type: 'SHEET', 
+      x: bedCenter.x, 
+      y: bedCenter.y,
+      width: sheetW, 
+      height: sheetH, 
+      material: mat, 
+      holes: []
+    };
+    items.push(currentSheetItem);
+  } else {
+    const bedCenter = targetMachine.getBedCenter();
+    currentSheetItem.x = bedCenter.x;
+    currentSheetItem.y = bedCenter.y;
+  }
+
+  if (currentSheetItem.holes.length >= MAX_SLOTS) {
+    alert('Esta chapa atingiu o limite de 6 slots. Clique em "+ Criar Nova Chapa" ou descarte esta na lixeira.');
     return;
   }
 
-  const mat = MATERIALS[selectedMaterialKey];
-  const obj = OBJECTS[selectedObjectKey];
-  const analysis = analyzeEngineering(selectedMaterialKey, selectedObjectKey);
-  const targetMachine = machines.find(m => m.type === analysis.machine) || machines[2];
-
-  targetMachine.startOperation(mat, obj, () => {
-    const sheetW = 210, sheetH = 120;
-    if (!currentSheetItem || currentSheetItem.holes.length >= MAX_SLOTS) {
-      const bedCenter = targetMachine.getBedCenter();
-      currentSheetItem = {
-        id: 'sheet_' + Date.now(), type: 'SHEET', x: bedCenter.x, y: bedCenter.y - 10,
-        width: sheetW, height: sheetH, material: mat, holes: []
-      };
-      items.push(currentSheetItem);
-    }
-    // Adicionar o furo na chapa correspondente ao slot
+  targetMachine.startOperation(() => {
     currentSheetItem.holes.push({ objectType: obj.id, w: obj.width, h: obj.height });
     
-    // Gerar o produto cortado para fora
-    items.push({
-      id: 'prod_' + Date.now(), type: 'PRODUCT', x: currentSheetItem.x + 30, y: currentSheetItem.y + 65,
-      width: obj.width, height: obj.height, material: mat, objectType: obj.id
+    finishedProducts.push({
+      material: mat,
+      objectType: obj.id,
+      width: obj.width,
+      height: obj.height
     });
+
     updateNestingUI();
   });
 }
 
-// Configuração de Arraste (Drag & Drop) com Mouse/Toque no Canvas
+// Configuração de Arraste (Drag & Drop) e Deseleção ao clicar no vazio
 canvas.addEventListener('mousedown', (e) => {
   const rect = canvas.getBoundingClientRect();
   const mx = e.clientX - rect.left;
   const my = e.clientY - rect.top;
+  
+  let clickedOnItem = false;
   
   for (let i = items.length - 1; i >= 0; i--) {
     const item = items[i];
     const halfW = (item.width || 50) / 2;
     const halfH = (item.height || 50) / 2;
     if (mx >= item.x - halfW && mx <= item.x + halfW && my >= item.y - halfH && my <= item.y + halfH) {
+      clickedOnItem = true;
+      
+      if (item.type === 'SHEET') {
+        currentSheetItem = item;
+        selectedMaterialKey = Object.keys(MATERIALS).find(k => MATERIALS[k].id === item.material.id) || selectedMaterialKey;
+        initUIControls();
+        updateNestingUI();
+      }
+
       draggedItem = item;
       dragOffset.x = item.x - mx;
       dragOffset.y = item.y - my;
@@ -369,6 +441,12 @@ canvas.addEventListener('mousedown', (e) => {
       items.push(draggedItem);
       break;
     }
+  }
+
+  // DESELEÇÃO NO VAZIO: Se clicar fora de qualquer item, deseleciona a chapa ativa
+  if (!clickedOnItem) {
+    currentSheetItem = null;
+    updateNestingUI();
   }
 });
 
@@ -381,7 +459,6 @@ window.addEventListener('mousemove', (e) => {
 
 window.addEventListener('mouseup', () => {
   if (draggedItem) {
-    // Zona de lixo / descarte
     if (zones.trash && draggedItem.x >= zones.trash.x && draggedItem.x <= zones.trash.x + zones.trash.w &&
         draggedItem.y >= zones.trash.y && draggedItem.y <= zones.trash.y + zones.trash.h) {
       items = items.filter(i => i.id !== draggedItem.id);
@@ -416,10 +493,27 @@ function initUIControls() {
     btn.addEventListener('click', () => { selectedObjectKey = key; initUIControls(); });
     objContainer.appendChild(btn);
   });
+
+  // Adicionar botão para forçar nova chapa na barra lateral
+  const sidebar = document.querySelector('aside');
+  let newSheetBtn = document.getElementById('btn-new-sheet');
+  if (!newSheetBtn && sidebar) {
+    newSheetBtn = document.createElement('button');
+    newSheetBtn.id = 'btn-new-sheet';
+    newSheetBtn.className = 'w-full py-2 bg-[#1e2430] hover:bg-[#283040] text-slate-200 font-mono-tech text-xs rounded border border-[#343e52] mt-2';
+    newSheetBtn.innerText = '➕ CRIAR NOVA CHAPA';
+    newSheetBtn.addEventListener('click', () => processManufacturing(true));
+    
+    // Insere antes do botão de fabricação
+    const fabBtn = document.getElementById('btn-fabricate');
+    if (fabBtn) {
+      fabBtn.parentNode.insertBefore(newSheetBtn, fabBtn);
+    }
+  }
 }
 
 window.addEventListener('resize', setupLayout);
-document.getElementById('btn-fabricate').addEventListener('click', processManufacturing);
+document.getElementById('btn-fabricate').addEventListener('click', () => processManufacturing(false));
 
 window.onload = () => {
   initUIControls();
